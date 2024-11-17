@@ -16,11 +16,6 @@ common_columns = X_train.columns.intersection(X_test.columns)
 X_train = X_train[common_columns]
 X_test = X_test[common_columns]
 
-# Check initial shapes after aligning columns
-print("Initial shapes after aligning columns:")
-print("X_train shape:", X_train.shape)
-print("X_test shape:", X_test.shape)
-
 # # Apply PCA with a fixed number of components within the limit
 n_components = min(15, X_train.shape[1])
 

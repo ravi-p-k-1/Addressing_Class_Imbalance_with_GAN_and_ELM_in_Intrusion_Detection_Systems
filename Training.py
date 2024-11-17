@@ -115,39 +115,39 @@ class Preprocess:
         return dataframe
 
     # Task 2: Feature Engineering - Feature selection
-    def feature_selection(self, dataframe):
-        print("Performing feature selection...")
+    # def feature_selection(self, dataframe):
+    #     print("Performing feature selection...")
 
-        # Filter out non-numeric columns
-        numeric_df = dataframe.select_dtypes(include=['float64', 'int64']).copy()
+    #     # Filter out non-numeric columns
+    #     numeric_df = dataframe.select_dtypes(include=['float64', 'int64']).copy()
 
-        # Drop columns with any NaN values or fill them with 0, depending on your preference
-        numeric_df = numeric_df.dropna(axis=1)  # or use numeric_df.fillna(0)
+    #     # Drop columns with any NaN values or fill them with 0, depending on your preference
+    #     numeric_df = numeric_df.dropna(axis=1)  # or use numeric_df.fillna(0)
 
-        # Variance threshold
-        var_thres = VarianceThreshold(threshold=0)
-        var_thres.fit(numeric_df)
-        dropable_const_cols = numeric_df.columns[[not col for col in var_thres.get_support()]]
-        numeric_df = numeric_df.drop(dropable_const_cols, axis=1)
-        print(f"Low variance features removed: {list(dropable_const_cols)}")
+    #     # Variance threshold
+    #     var_thres = VarianceThreshold(threshold=0)
+    #     var_thres.fit(numeric_df)
+    #     dropable_const_cols = numeric_df.columns[[not col for col in var_thres.get_support()]]
+    #     numeric_df = numeric_df.drop(dropable_const_cols, axis=1)
+    #     print(f"Low variance features removed: {list(dropable_const_cols)}")
 
-        # Correlation matrix and removal of highly correlated features
-        correlation_matrix = np.corrcoef(numeric_df, rowvar=False)
-        correlated_features = [numeric_df.columns[x[0]] for x in self.get_correlated_features(correlation_matrix, 0.95)]
-        numeric_df = numeric_df.drop(correlated_features, axis=1)
-        print(f"Highly correlated features removed: {correlated_features}")
+    #     # Correlation matrix and removal of highly correlated features
+    #     correlation_matrix = np.corrcoef(numeric_df, rowvar=False)
+    #     correlated_features = [numeric_df.columns[x[0]] for x in self.get_correlated_features(correlation_matrix, 0.95)]
+    #     numeric_df = numeric_df.drop(correlated_features, axis=1)
+    #     print(f"Highly correlated features removed: {correlated_features}")
 
-        return numeric_df
+    #     return numeric_df
 
-    def get_correlated_features(self, correlation_matrix, threshold=0.8):
-        num_features = correlation_matrix.shape[0]
-        correlated_features = set()
-        for i in range(num_features):
-            for j in range(i + 1, num_features):
-                correlation = correlation_matrix[i, j]
-                if correlation >= threshold:
-                    correlated_features.add((i, j))
-        return correlated_features
+    # def get_correlated_features(self, correlation_matrix, threshold=0.8):
+    #     num_features = correlation_matrix.shape[0]
+    #     correlated_features = set()
+    #     for i in range(num_features):
+    #         for j in range(i + 1, num_features):
+    #             correlation = correlation_matrix[i, j]
+    #             if correlation >= threshold:
+    #                 correlated_features.add((i, j))
+    #     return correlated_features
 
     # Task 4: Handling class imbalance
     def hybrid_sampling(self, X, y):
@@ -197,16 +197,20 @@ class Preprocess:
         )
 
         # Check if y_train has more than one class before applying SMOTEENN
-        if len(y_train.unique()) > 1:
-            X_train, y_train = self.hybrid_sampling(X_train, y_train)
-        else:
-            print("Warning: y_train has only one class. Skipping hybrid sampling.")
+        # if len(y_train.unique()) > 1:
+        #     X_train, y_train = self.hybrid_sampling(X_train, y_train)
+        # else:
+        #     print("Warning: y_train has only one class. Skipping hybrid sampling.")
 
         # # Feature selection on X_train only
-        X_train = self.feature_selection(X_train)
+        # X_train = self.feature_selection(X_train)
 
         # Ensure X_val and X_test have the same columns as X_train after feature selection
         X_test = X_test[X_train.columns]
+
+        print("\nShapes before PCA:")
+        print("X_train shape:", X_train.shape)
+        print("X_test shape:", X_test.shape)
 
         # Apply PCA on all sets
         n_components = min(15, X_train.shape[1])  # Set n_components <= minimum feature count
