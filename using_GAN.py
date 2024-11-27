@@ -15,9 +15,14 @@ LATENT_DIM = 100
 LEARNING_RATE = 0.0002
 BETA_1 = 0.5
 
-# Paths
-# INPUT_PATH = "processed_train.csv"
-INPUT_PATH = "processed_test.csv"
+
+if (choice := input('t for train, other for test\n').lower().rstrip()) == 't':
+    print('Training selected')
+    # Paths
+    INPUT_PATH = "processed_train.csv"
+else:
+    print('Testing selected')
+    INPUT_PATH = "processed_test.csv"
 
 # Load and preprocess data
 data = pd.read_csv(INPUT_PATH)
@@ -129,13 +134,15 @@ combined_data = pd.concat([data, synthetic_df], ignore_index=True)
 X_train = combined_data.drop(columns=['label'])
 y_train = combined_data['label']
 
-# Save the features and labels as separate CSV files
-# X_train.to_csv('processed_X_train.csv', index=False)
-# y_train.to_csv('processed_y_train.csv', index=False)
+if choice == 't':
+    # Save the features and labels as separate CSV files
+    X_train.to_csv('processed_X_train.csv', index=False)
+    y_train.to_csv('processed_y_train.csv', index=False)
+    print(f"Generated and combined data saved to processed_X_train and processed_y_train")
+else:
+    INPUT_PATH = "processed_test.csv"
+    X_train.to_csv('processed_X_test.csv', index=False)
+    y_train.to_csv('processed_y_test.csv', index=False)
+    print(f"Generated and combined data saved to processed_X_test and processed_y_test")
 
-X_train.to_csv('processed_X_test.csv', index=False)
-y_train.to_csv('processed_y_test.csv', index=False)
 
-# Save combined data
-# combined_data.to_csv(OUTPUT_PATH, index=False)
-print(f"Generated and combined data saved to processed_X_train and processed_y_train")
