@@ -94,13 +94,11 @@ class Preprocess:
         self.lb_ub[column_name] = (lb, ub)
         print(f"Outliers removed for {column_name}. Lower bound: {lb}, Upper bound: {ub}")
 
-    def one_hot_encode(self, dataframe, column):
-        """Apply one-hot encoding to a categorical column."""
-        print(f"Applying one-hot encoding to {column}...")
-        encoded_df = pd.DataFrame(self.one_hot_encoder.fit_transform(dataframe[[column]]))
-        encoded_df.columns = self.one_hot_encoder.get_feature_names_out([column])
-        dataframe = dataframe.drop(column, axis=1).join(encoded_df)
-        print(f"One-hot encoding applied to {column}.")
+    def encode_categorical(self, dataframe, column):
+        """Apply label encoding to a categorical column."""
+        print(f"Applying label encoding to {column}...")
+        dataframe[column] = self.label_encoder.fit_transform(dataframe[column].astype(str))
+        print(f"Label encoding applied to {column}.")
         return dataframe
 
     def hybrid_sampling(self, X, y):
@@ -120,9 +118,9 @@ class Preprocess:
         for col in ['dur', 'spkts', 'sloss', 'dloss']:
             self.remove_outlier(dataframe, col, isTest)
 
-        # One-hot encode categorical columns
+        # label encode categorical columns
         for col in ['proto', 'service', 'state']:
-            dataframe = self.one_hot_encode(dataframe, col)
+            dataframe = self.encode_categorical(dataframe, col)
 
         # Apply standardization and normalization to numerical columns
         numerical_cols = dataframe.select_dtypes(include=['float64', 'int64']).columns
@@ -187,8 +185,8 @@ class Preprocess:
 
 
 # Paths to the data files
-train_file_path = 'new_GAN_training.csv'
-# train_file_path = 'new_training.csv'
+# train_file_path = 'new_GAN_training.csv'
+train_file_path = 'new_training.csv'
 test_file_path = 'new_testing.csv'
 
 # Instantiate the Preprocess class and run the preprocessing
@@ -196,9 +194,25 @@ processed = Preprocess(train_file_path, test_file_path, chunk_size=1000)
 X_train, X_test, y_train, y_test = processed.train_test_split()
 
 # Save processed data to CSV
-pd.DataFrame(X_train, columns=[f'PC{i+1}' for i in range(X_train.shape[1])]).to_csv('processed_X_train.csv', index=False)
-pd.DataFrame(X_test, columns=[f'PC{i+1}' for i in range(X_test.shape[1])]).to_csv('processed_X_test.csv', index=False)
-pd.DataFrame(y_train, columns=['label']).to_csv('processed_y_train.csv', index=False)
-pd.DataFrame(y_test, columns=['label']).to_csv('processed_y_test.csv', index=False)
+
+train_data = pd.concat([
+    pd.DataFrame(X_train, columns=[f'PC{i+1}' for i in range(X_train.shape[1])]),
+    pd.DataFrame(y_train, columns=['label'])
+], axis=1)
+
+# Combine X_test and y_test into a single DataFrame
+test_data = pd.concat([
+    pd.DataFrame(X_test, columns=[f'PC{i+1}' for i in range(X_test.shape[1])]),
+    pd.DataFrame(y_test, columns=['label'])
+], axis=1)
+
+# Save combined DataFrames to CSV
+train_data.to_csv('processed_train.csv', index=False)
+test_data.to_csv('processed_test.csv', index=False)
+
+# pd.DataFrame(X_train, columns=[f'PC{i+1}' for i in range(X_train.shape[1])]).to_csv('processed_X_train.csv', index=False)
+# pd.DataFrame(X_test, columns=[f'PC{i+1}' for i in range(X_test.shape[1])]).to_csv('processed_X_test.csv', index=False)
+# pd.DataFrame(y_train, columns=['label']).to_csv('processed_y_train.csv', index=False)
+# pd.DataFrame(y_test, columns=['label']).to_csv('processed_y_test.csv', index=False)
 
 print("Processed data saved to CSV files.")
