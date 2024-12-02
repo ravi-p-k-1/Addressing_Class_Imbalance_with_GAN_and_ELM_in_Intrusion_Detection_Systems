@@ -4,15 +4,16 @@ import pandas as pd
 import tensorflow as tf
 from keras import layers, models, optimizers
 from sklearn.preprocessing import MinMaxScaler
+import joblib
 
 # Suppress TensorFlow logging
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppresses TensorFlow messages
 
 # Configuration
-BATCH_SIZE = 64
-EPOCHS = 10000
+BATCH_SIZE = 1000
+EPOCHS = 5
 LATENT_DIM = 100
-LEARNING_RATE = 0.0002
+LEARNING_RATE = 0.001
 BETA_1 = 0.5
 
 
@@ -20,9 +21,9 @@ if (choice := input('t for train, other for test\n').lower().rstrip()) == 't':
     print('Training selected')
     # Paths
     INPUT_PATH = "processed_train.csv"
-else:
-    print('Testing selected')
-    INPUT_PATH = "processed_test.csv"
+# else:
+#     print('Testing selected')
+#     INPUT_PATH = "processed_test.csv"
 
 # Load and preprocess data
 data = pd.read_csv(INPUT_PATH)
@@ -94,23 +95,31 @@ progress_intervals = EPOCHS // 10
 for epoch in range(EPOCHS):
     try:
         # Train discriminator
-        idx = np.random.randint(0, data_for_gan.shape[0], BATCH_SIZE)
-        real_samples = data_for_gan[idx]
+        for start in range(0, data_for_gan.shape[0], BATCH_SIZE):
+            # Generate indices for the current batch
+            idx = np.arange(start, min(start + BATCH_SIZE, data_for_gan.shape[0]))
+            
+            # Get the real samples for the current batch using the indices
+            real_samples = data_for_gan[idx]
 
-        noise = np.random.normal(0, 1, (BATCH_SIZE, LATENT_DIM))
-        fake_samples = generator.predict(noise, verbose=0)
+            # Train discriminator
+            noise = np.random.normal(0, 1, (len(real_samples), LATENT_DIM))  # Noise matches batch size
+            fake_samples = generator.predict(noise, verbose=0)
 
-        d_loss_real = discriminator.train_on_batch(real_samples, real_labels)
-        d_loss_fake = discriminator.train_on_batch(fake_samples, fake_labels)
-        d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
+            real_labels = np.ones((len(real_samples), 1))
+            fake_labels = np.zeros((len(real_samples), 1))
 
-        # Train generator
-        noise = np.random.normal(0, 1, (BATCH_SIZE, LATENT_DIM))
-        g_loss = gan.train_on_batch(noise, real_labels)
+            d_loss_real = discriminator.train_on_batch(real_samples, real_labels)
+            d_loss_fake = discriminator.train_on_batch(fake_samples, fake_labels)
+            d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
-        # Print progress at intervals
-        if epoch % progress_intervals == 0:
-            print(f"{(epoch // progress_intervals) * 10}% done")
+            # Train generator
+            noise = np.random.normal(0, 1, (len(real_samples), LATENT_DIM))
+            g_loss = gan.train_on_batch(noise, real_labels)
+
+
+            # Print progress at intervals
+            print(f"batch: {start}")
 
     except Exception as e:
         print(f"Error during training at epoch {epoch}: {e}")
@@ -129,6 +138,8 @@ synthetic_columns = not_normal_data.drop(columns=['proto', 'state', 'attack_cat'
 synthetic_df = pd.DataFrame(synthetic_data, columns=synthetic_columns)
 synthetic_df['label'] = 1
 combined_data = pd.concat([data, synthetic_df], ignore_index=True)
+joblib.dump(generator, 'generator_model.pkl')
+joblib.dump(discriminator, 'discriminator_model.pkl')
 
 # Split into features (X_train) and labels (y_train)
 X_train = combined_data.drop(columns=['label'])
@@ -139,10 +150,14 @@ if choice == 't':
     X_train.to_csv('processed_X_train.csv', index=False)
     y_train.to_csv('processed_y_train.csv', index=False)
     print(f"Generated and combined data saved to processed_X_train and processed_y_train")
-else:
-    INPUT_PATH = "processed_test.csv"
-    X_train.to_csv('processed_X_test.csv', index=False)
-    y_train.to_csv('processed_y_test.csv', index=False)
-    print(f"Generated and combined data saved to processed_X_test and processed_y_test")
+# else:
+#     INPUT_PATH = "processed_test.csv"
+#     X_train.to_csv('processed_X_test.csv', index=False)
+#     y_train.to_csv('processed_y_test.csv', index=False)
+#     print(f"Generated and combined data saved to processed_X_test and processed_y_test")
 
+print("\nStatistics of Real Data:")
+print(not_normal_data.describe())
 
+print("\nStatistics of Synthetic Data:")
+print(synthetic_df.describe())

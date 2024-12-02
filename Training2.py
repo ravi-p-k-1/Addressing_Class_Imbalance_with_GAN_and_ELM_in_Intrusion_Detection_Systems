@@ -211,8 +211,8 @@ train_data.to_csv('processed_train.csv', index=False)
 test_data.to_csv('processed_test.csv', index=False)
 
 # pd.DataFrame(X_train, columns=[f'PC{i+1}' for i in range(X_train.shape[1])]).to_csv('processed_X_train.csv', index=False)
-# pd.DataFrame(X_test, columns=[f'PC{i+1}' for i in range(X_test.shape[1])]).to_csv('processed_X_test.csv', index=False)
+pd.DataFrame(X_test, columns=[f'PC{i+1}' for i in range(X_test.shape[1])]).to_csv('real_processed_X_test.csv', index=False)
 # pd.DataFrame(y_train, columns=['label']).to_csv('processed_y_train.csv', index=False)
-# pd.DataFrame(y_test, columns=['label']).to_csv('processed_y_test.csv', index=False)
+pd.DataFrame(y_test, columns=['label']).to_csv('real_processed_y_test.csv', index=False)
 
 print("Processed data saved to CSV files.")
