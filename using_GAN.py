@@ -5,6 +5,8 @@ import tensorflow as tf
 from keras import layers, models, optimizers
 from sklearn.preprocessing import MinMaxScaler
 import joblib
+# import seaborn as sns
+# import matplotlib.pyplot as plt
 
 # Suppress TensorFlow logging
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppresses TensorFlow messages
@@ -161,3 +163,22 @@ print(not_normal_data.describe())
 
 print("\nStatistics of Synthetic Data:")
 print(synthetic_df.describe())
+
+
+# output_dir = "kde_plots"
+# os.makedirs(output_dir, exist_ok=True)
+
+# # Loop through each column and save the plots
+# for column in not_normal_data.columns:
+#     plt.figure(figsize=(8, 4))
+#     sns.kdeplot(not_normal_data[column], label="Real", shade=True)
+#     sns.kdeplot(synthetic_df[column], label="Synthetic", shade=True)
+#     plt.title(f"Distribution of {column}")
+#     plt.legend()
+
+#     # Save the figure to the output directory
+#     output_path = os.path.join(output_dir, f"{column}_distribution.png")
+#     plt.savefig(output_path, format="png", dpi=300)
+
+#     # Close the figure to free up memory
+#     plt.close()
